@@ -1,0 +1,2 @@
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.1.0")
+// spark-submit --class com.thanu.llm.LLMEncoderDriver --master local[*] --executor-memory 4G --total-executor-cores 4 --conf "spark.hadoop.mapreduce.output.fileoutputformat.outputdir.overwrite=true" --conf "spark.local.dir=C:\Temp\spark" "D:\IdeaProjects\Homework2Spark\target\scala-2.13\LLM-Spark-DL4J-assembly.jar" "C:\Documents\embedding.txt" "D:\IdeaProjects\Homework2Spark\src\main\scala\Rhedewdeh" 300
