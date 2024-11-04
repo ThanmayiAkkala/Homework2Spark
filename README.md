@@ -116,13 +116,13 @@ Evaluation metrics calculated:
 
 After deploying on emr when the status is complete:
 
-![image](https://github.com/user-attachments/assets/3f01cf0d-7fac-474d-a262-bc53f3c46526)
+![image](https://github.com/user-attachments/assets/58d4033b-7991-44f6-b4aa-887af50c1cda)
 
-the output folders that are passed as arguments for output_1 and output_2 are created and the corresponding output files:
 
-![image](https://github.com/user-attachments/assets/ff30a583-39b1-49b3-85d7-6b1541d8078d)
+the output folders that are passed as arguments for output folders and training zip file are created:
 
-![image](https://github.com/user-attachments/assets/a9882073-f6c0-4158-ae20-2547dda6a0da)
+![image](https://github.com/user-attachments/assets/156aeed6-4ebf-45f5-a1a4-3857253aa0eb)
+
 
 
 
