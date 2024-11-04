@@ -397,7 +397,7 @@ import org.nd4j.linalg.learning.config.Adam
 import org.nd4j.evaluation.classification.Evaluation
 import org.deeplearning4j.util.ModelSerializer
 
-object LLMEncoderDriver {
+object MainDriver {
   val logger: Logger = Logger.getLogger(this.getClass.getName)
 
   def main(args: Array[String]): Unit = {
