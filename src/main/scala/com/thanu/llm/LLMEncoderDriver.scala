@@ -415,7 +415,7 @@ object LLMEncoderDriver {
     val spark = SparkSession.builder
       .appName("LLM Encoder with Spark")
       .master("local[*]")
-      .config("spark.local.dir", "C:\\Bigdata")  // Adjust path if needed
+      //.config("spark.local.dir", "C:\\Bigdata")  // Adjust path if needed
       .getOrCreate()
     spark.conf.set("spark.hadoop.mapreduce.output.fileoutputformat.outputdir.overwrite", "true")
 
