@@ -1,31 +1,3 @@
-//package com.thanu.llm
-//
-//import scala.util.Random
-//import org.apache.spark.rdd.RDD
-//import org.apache.spark.sql.SparkSession
-//import org.nd4j.linalg.api.ndarray.INDArray
-//import org.nd4j.linalg.factory.Nd4j
-//
-//object EmbeddingUtils {
-//  // Function to generate a random embedding vector of a given dimension
-//  def generateRandomEmbedding(dim: Int): INDArray = {
-//    Nd4j.rand(1, dim)
-//  }
-//
-//  // Function to load embeddings
-//  // This is used in this assignment
-//  def loadEmbeddings(spark: SparkSession, path: String, embeddingDim: Int): RDD[(String, INDArray)] = {
-//    val embeddingsDF = spark.read
-//      .option("header", "true")
-//      .csv(path)
-//
-//    embeddingsDF.rdd.map(row => {
-//      val token = row.getString(0)
-//      val embedding = Nd4j.create(row.toSeq.tail.map(_.toString.toDouble).toArray).reshape(1, embeddingDim)
-//      (token, embedding)
-//    })
-//  }
-//}
 package com.thanu.llm
 
 import java.util.logging.{Level, Logger}
@@ -44,7 +16,7 @@ object EmbeddingUtils {
     Nd4j.rand(1, dim)
   }
 
-  // Function to load embeddings from a CSV file
+  // Function to load embeddings from a file
   def loadEmbeddings(spark: SparkSession, path: String, embeddingDim: Int): RDD[(String, INDArray)] = {
     logger.info(s"Loading embeddings from path: $path with embedding dimension $embeddingDim.")
 
