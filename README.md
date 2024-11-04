@@ -92,15 +92,16 @@ This project uses **SBT** (Scala Build Tool) to manage dependencies and compile 
 The tests are under in src/tests/scala. These can be run using sbt test at once or sbt.
 It can be run using the scala test or by passing the files individually like: sbt "testOnly *SlidingWindowTest"
 More detailed in this docs: https://docs.google.com/document/d/1CsSLDK4hZqzr5Y7--g8d4cAiiCtesisuCnXA9J8Bxn8/edit?usp=sharing
-### Output Explanation:
-The first mapper reducer gives the tokens and the number of occurences.
-![image](https://github.com/user-attachments/assets/77be1062-127d-4b9a-83df-e7dc667a091d)
-![image](https://github.com/user-attachments/assets/dc9753e5-f7a5-45e8-86a9-e454904f6825)
+### Output Explanation :
+The folders and the model is saved in this way in the output dierectory mentioned:
+![image](https://github.com/user-attachments/assets/addf1332-8c41-4f35-b70e-ade8fa79cc04)
 
-The wordsvec Mapper and reducer gives the token and its corresponding embeddings and the similar tokens down in the output file
+The embeddings and the sliding window folder contain embedding and feature and targets repectively
 
-![image](https://github.com/user-attachments/assets/5a2ebc7b-40ec-49c8-979a-b0f9c3520dd5)
-![image](https://github.com/user-attachments/assets/aba4da8e-37e6-4162-a3c0-3dce78397cbb)
+![image](https://github.com/user-attachments/assets/d9bed975-12fe-4529-b7a4-aff6d94c4b37)
+
+
+
 
 After deploying on emr when the status is complete:
 
