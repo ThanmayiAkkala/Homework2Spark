@@ -15,8 +15,8 @@ This project focuses on implementing a distributed pipeline to train a Large Lan
 ### Key Files:
 - **EmbeddingUtils.scala**: This utility file includes essential functions for working with embeddings.
 - **SlidingWindowProcessor.scala**:Handles the creation of sliding windows to transform token embeddings into a suitable format for training
-- **LLMEncoderDriver.scala**: The main driver file that orchestrates the Spark job, model training, and evaluation steps:
-  - createModel(...): Configures the LSTM model with specified layers, using an Adam optimizer for training.
+- **ModelConfig.scala**: The Model is configered in this file.
+- **MainDriver.scala**: The main driver file that orchestrates the Spark job, model training, and evaluation steps:
   - Epoch-based training loop for distributed training on Spark.
   - Model evaluation using test datasets, and saves metrics like training statistics, gradient norms, and evaluation results.
 
@@ -94,24 +94,35 @@ It can be run using the scala test or by passing the files individually like: sb
 More detailed in this docs: https://docs.google.com/document/d/1CsSLDK4hZqzr5Y7--g8d4cAiiCtesisuCnXA9J8Bxn8/edit?usp=sharing
 ### Output Explanation :
 The folders and the model is saved in this way in the output dierectory mentioned:
+
 ![image](https://github.com/user-attachments/assets/addf1332-8c41-4f35-b70e-ade8fa79cc04)
 
 The embeddings and the sliding window folder contain embedding and feature and targets repectively
 
 ![image](https://github.com/user-attachments/assets/d9bed975-12fe-4529-b7a4-aff6d94c4b37)
 
+Evaluation metrics calculated:
 
+![image](https://github.com/user-attachments/assets/4f3fc0be-a8f1-4e30-ac1a-d10b064f10d3)
+![image](https://github.com/user-attachments/assets/de995337-712c-424b-bbe4-af8e70ad0156)
+
+![image](https://github.com/user-attachments/assets/93472386-4144-4d66-a30a-76536e4b48d0)
+
+
+![image](https://github.com/user-attachments/assets/a19221cd-608f-462e-9d82-3944b2f1a2d4)
+
+![image](https://github.com/user-attachments/assets/1659ee78-26bb-44ed-8f92-164f8fb1094f)
 
 
 After deploying on emr when the status is complete:
 
-![image](https://github.com/user-attachments/assets/3f01cf0d-7fac-474d-a262-bc53f3c46526)
+![image](https://github.com/user-attachments/assets/58d4033b-7991-44f6-b4aa-887af50c1cda)
 
-the output folders that are passed as arguments for output_1 and output_2 are created and the corresponding output files:
 
-![image](https://github.com/user-attachments/assets/ff30a583-39b1-49b3-85d7-6b1541d8078d)
+the output folders that are passed as arguments for output folders and training zip file are created:
 
-![image](https://github.com/user-attachments/assets/a9882073-f6c0-4158-ae20-2547dda6a0da)
+![image](https://github.com/user-attachments/assets/156aeed6-4ebf-45f5-a1a4-3857253aa0eb)
+
 
 
 
