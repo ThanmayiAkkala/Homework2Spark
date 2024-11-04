@@ -40,7 +40,7 @@ object EmbeddingUtils {
 
   // Function to generate a random embedding vector of a given dimension
   def generateRandomEmbedding(dim: Int): INDArray = {
-    logger.info(s"Generating random embedding of dimension $dim.")
+
     Nd4j.rand(1, dim)
   }
 
