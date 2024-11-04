@@ -1,44 +1,43 @@
-# CS441 Homework1
+# CS441 Homework2
 
 **Name**: Thanmayi Akkala  
 **Email**: takkal2@uic.edu
 
 **UIN**: 650556907
 
-**Video Link**: https://youtu.be/wxtleucxmeU
-(Would suggest to watch in 1.5x or even 2x :-) )
+**Video Link**: 
+
 
 ## Overview
-The LLM Encoder Project is designed to process large-scale text corpora using a parallel distributed system architecture. This project utilizes Hadoop's MapReduce framework to handle data tokenization, word frequency calculation, and Word2Vec-based token embedding generation. The primary goal of the system is to generate token embeddings that capture the semantic meaning of words in the corpus and identify tokens that are semantically similar using cosine similarity.
 
-The system processes text data efficiently by leveraging the MapReduce paradigm for distributed data handling. The project is designed to scale and handle massive datasets, making it particularly suited for cloud environments like Amazon EMR. By using a combination of tokenization and deep learning-based Word2Vec embeddings, this system provides meaningful word embeddings and relationships between tokens, which are valuable for various natural language processing tasks.
-
-
-This project is implemented using **Java 11** to ensure compatibility with modern cloud environments and uses key technologies such as Hadoop 3.3.6 and Deeplearning4j for Word2Vec embeddings.
-
+This project focuses on implementing a distributed pipeline to train a Large Language Model (LLM) encoder using Apache Spark and DeepLearning4J (DL4J), optimized for handling sequential data in a large-scale distributed environment. It begins by generating or loading embeddings for each token in the dataset, which are then processed into input sequences using a sliding window approach. This transformation enables the model to learn contextual patterns from overlapping windows, ideal for sequence-based neural networks like LSTMs. The pipeline is configured with an LSTM-based model, which is trained in parallel across Spark’s distributed architecture to maximize scalability and efficiency. Following each epoch, the model undergoes evaluation on test data to track performance metrics such as accuracy and loss, alongside key statistics like gradient norms, learning rates, and training durations, providing a comprehensive view of the training process. Finally, the trained model is saved for future applications, and Spark’s UI enables monitoring of job execution, memory usage, and shuffling statistics to optimize resource utilization and identify performance improvements. 
 
 ### Key Files:
-- **TokenisationMapper.scala**: Tokenizes input text into individual tokens and emits.
-- **TokenisationReducer.scala**: Aggregates the count of each token across the dataset and is responisible for the next step of generating vector embeddings.
-- **Word2VecMapper.scala**: Trains the Word2Vec model on the input tokens and outputs the token embeddings.
-- **Word2VecReducer.scala**: Handles the embeddings and processes any further aggregation or reduction tasks.
-- **LLMEncoderDriver.scala**: The driver class orchestrating the MapReduce job flow.
+- **EmbeddingUtils.scala**: This utility file includes essential functions for working with embeddings.
+- **SlidingWindowProcessor.scala**:Handles the creation of sliding windows to transform token embeddings into a suitable format for training
+- **LLMEncoderDriver.scala**: The main driver file that orchestrates the Spark job, model training, and evaluation steps:
+  - createModel(...): Configures the LSTM model with specified layers, using an Adam optimizer for training.
+  - Epoch-based training loop for distributed training on Spark.
+  - Model evaluation using test datasets, and saves metrics like training statistics, gradient norms, and evaluation results.
 
 ### Build Instructions
 This project uses **SBT** (Scala Build Tool) to manage dependencies and compile the project.
 
 **build.sbt** includes the following dependencies:
-- `org.apache.hadoop`: For MapReduce and Hadoop Common libraries.
-- `org.deeplearning4j`: For the Word2Vec implementation.
-- `jtokkit`: For tokenization.
-- Logging libraries like `logback` and `slf4j`.
+
+- `org.apache.spark`: Provides the Spark libraries used to set up and manage the distributed training infrastructure.
+- `org.apache.hadoop`: For distributed processing and handling large datasets within the Spark job.
+- `org.deeplearning4j`: For the LSTM model and neural network training, including functionalities for model configuration, training, and evaluation.
+- `org.nd4j`: For handling and manipulating ND4J tensors, essential for creating embeddings and working with multidimensional data arrays.
+- Logging libraries such as `logback` and `slf4j`: Used for detailed logging and debugging of the training, evaluation, and job execution processes.
+
 
 ## Running the Project
 
 ### Prerequisites:
 - **Java Version**: Ensure that **Java 11** is installed and set as your default JDK.
-- **Scala Version**: The project is built with **Scala 2.13.8**.
-- **Hadoop Version**: This project is tested on **Hadoop 3.3.6**.
+- **Scala Version**: The project is built with **Scala 2.12.5**.
+- **Spark Version**: Pre-built for Apache Hadoop 3.3 and later.
 - **SBT Version**: Use **SBT 1.x** to build and package the project.
 - **Deeplearning4j**: The project uses **Deeplearning4j 1.0.0-M2.1** for Word2Vec embeddings.
 
@@ -52,39 +51,46 @@ This project uses **SBT** (Scala Build Tool) to manage dependencies and compile 
    - Run `sbt clean assembly` to compile and build the project into a JAR file.
 
 3. **Running the Code in IntelliJ**:
-   - Open the `LLMEncoderDriver.scala` file.
+   - Open the `MainDriver.scala` file.
    - Provide the required input arguments to the `main` method. Example:
      ```
-     sbt run com.thanu.llm.LLMEncoderDriver <input file path> <output directory> <output_directory_2>
+     sbt run com.thanu.llm.MainDriver <input file path> <output directory> <embedding dimension>
      ```
+   - Replace `<input file path>` with the path to your input data file, `<output directory>` with the directory where you want to save results, and `<embedding dimension>` with the desired dimension for the embeddings.
+
+   - **Note:** For the input file, an open-source embedding file is used along with the previouos output files to train the model.
+
      Example:
 
-![image](https://github.com/user-attachments/assets/d0376e38-8855-40b1-816e-fb8384d61e51)
+![image](https://github.com/user-attachments/assets/2f0fca4a-3a19-4c59-987d-66d66d28dca2)
 
-   - Ensure the dataset is in the appropriate directory (e.g., Project Gutenberg texts).
-   - Select `Run` or `Debug` from IntelliJ's menu to start the process.
    - After running, to check if it has successfully implemented, please check the output directory for the files even if warnings are shown.
+   - The output file typically include embeddings folder(for testing) and a sliding window folder that contains features and target embeddings and the finally when the model is trained it is saved as a zip file.
 
-4. **Running with Hadoop Locally**:
-   - Ensure that Hadoop is configured and running.
+4. **Running with Spark Locally**:
+   - Ensure that Spark is configured and running.
    - Also ensure you loaded the plugins.sbt for the assembly jar to work.
    - Run the following command:
      ```
-     hadoop jar target/scala-2.13/CloudLLMProject-assembly.jar com.thanu.llm.LLMEncoderDriver <input-path> <output-path-1> <output-path-2>
+      spark-submit \
+       --class com.thanu.llm.MainDriver \
+       --master <spark-master-url> \
+       --deploy-mode <deploy-mode> \
+       --num-executors <num-executors> \
+       --executor-memory <executor-memory> \
+       --executor-cores <executor-cores> \
+       /path/to/project.jar <input file path> <output directory> <embedding dimension>
      ```
-   - The `<input-path>` is the path to your input text file, and the `<output-path-1>` and `<output-path-2>` are the directories where output files will be written.
+   - The `<input-path>` is the path to your input embedding file, and the `<output directory>` directories where output files will be written.
 
 5. **Running on Amazon EMR**:
    - Upload the compiled JAR file and dataset files to **S3**.
-   - Create an EMR cluster with **Hadoop** and **Scala** pre-installed.
-   - Add a step to the EMR cluster using the following command format:
-     ```
-     hadoop jar s3://<your-bucket-name>/CloudLLMProject-assembly.jar com.thanu.llm.LLMEncoderDriver s3://<your-bucket-name>/<input-path> s3://<your-bucket-name>/<output-path-1> s3://<your-bucket-name>/<output-path-2>
-     ```
+   - Create an EMR cluster with **Spark** and **Scala** pre-installed.
+   - Add a step to the EMR cluster and add the jar file from s3 and pass the spark submit options and the arguments respectively
    - Monitor the cluster for job completion and download the results from S3.
 ### Scala Unit/Integration Tests:
 The tests are under in src/tests/scala. These can be run using sbt test at once or sbt.
-It can be run using the scala test or by passing the files individually like: sbt "testOnly *Word2VecMapperTest"
+It can be run using the scala test or by passing the files individually like: sbt "testOnly *SlidingWindowTest"
 More detailed in this docs: https://docs.google.com/document/d/1CsSLDK4hZqzr5Y7--g8d4cAiiCtesisuCnXA9J8Bxn8/edit?usp=sharing
 ### Output Explanation:
 The first mapper reducer gives the tokens and the number of occurences.
