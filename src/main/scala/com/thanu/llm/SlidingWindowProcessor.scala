@@ -1,63 +1,52 @@
 package com.thanu.llm
 
+import java.util.logging.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import scala.collection.mutable.ListBuffer
 
-
 object SlidingWindowProcessor {
+  val logger: Logger = Logger.getLogger(this.getClass.getName)
 
-  // Spark-compatible function to create sliding windows
-//  def createSlidingWindows(embeddingsRDD: RDD[INDArray], windowSize: Int, embeddingDim: Int): RDD[(INDArray, INDArray)] = {
-//    embeddingsRDD
-//      .mapPartitions(iter => {
-//        val embeddings = iter.toArray  // Convert iterator to array for sliding operation
-//        val dataSetList = new ListBuffer[(INDArray, INDArray)]()
-//
-//        for (i <- 0 until embeddings.length - windowSize) {
-//          // Extract input embeddings (window of size windowSize)
-//          val inputWindow = embeddings.slice(i, i + windowSize)
-//          val target = embeddings(i + windowSize)
-//
-//          // Stack and reshape to 3D format [1, windowSize, embeddingDim]
-////          val inputEmbeddings = Nd4j.vstack(inputWindow: _*).reshape(1, windowSize, embeddingDim)
-////          val inputEmbeddings = Nd4j.vstack(inputWindow: _*).reshape(1, windowSize, embeddingDim)
-////
-////          val target3D = target.reshape(1, 1, embeddingDim)
-//// Adjusting the sliding window shape to be in [sequence_length, embedding_dim]
-//          val inputEmbeddings = Nd4j.vstack(inputWindow: _*).reshape(windowSize, embeddingDim)
-//          val target3D = target.reshape(embeddingDim) // Ensures it’s a single 1D array for each sequence end token
-//
-//
-//          dataSetList += ((inputEmbeddings, target3D))
-//        }
-//        dataSetList.iterator
-//      })
-//  }
-// In SlidingWindowProcessor.scala
-def createSlidingWindows(embeddingsRDD: RDD[INDArray], windowSize: Int, embeddingDim: Int): RDD[(INDArray, INDArray)] = {
-  embeddingsRDD
-    .mapPartitions(iter => {
-      val embeddings = iter.toArray
-      val dataSetList = new ListBuffer[(INDArray, INDArray)]()
+  // Function to create sliding windows
+  def createSlidingWindows(embeddingsRDD: RDD[INDArray], windowSize: Int, embeddingDim: Int): RDD[(INDArray, INDArray)] = {
+    logger.info(s"Creating sliding windows with windowSize=$windowSize and embeddingDim=$embeddingDim.")
 
-      for (i <- 0 until embeddings.length - windowSize) {
-        // Input window
-        val inputWindow = embeddings.slice(i, i + windowSize)
-        val input3D = Nd4j.vstack(inputWindow: _*).reshape(1, windowSize, embeddingDim) // 3D input [1, windowSize, embeddingDim]
+    embeddingsRDD
+      .mapPartitions(iter => {
+        val embeddings = iter.toArray
+        val dataSetList = new ListBuffer[(INDArray, INDArray)]()
 
-        // Target
-        val target = embeddings(i + windowSize).reshape(1, embeddingDim) // 2D target [1, embeddingDim]
+        logger.info(s"Processing ${embeddings.length} embeddings in partition.")
 
-        dataSetList += ((input3D, target))
-      }
-      dataSetList.iterator
-    })
-}
+        for (i <- 0 until embeddings.length - windowSize) {
+          // Input window
+          val inputWindow = embeddings.slice(i, i + windowSize)
+          val input3D = Nd4j.vstack(inputWindow: _*).reshape(1, windowSize, embeddingDim)
 
-  // Function to compute positional embeddings (same as original)
+          // Target
+          val target = embeddings(i + windowSize).reshape(1, embeddingDim)
+
+          // Log shapes for debugging
+          logger.fine(s"Generated input3D shape: ${input3D.shape().mkString(",")}, target shape: ${target.shape().mkString(",")}")
+
+          dataSetList += ((input3D, target))
+        }
+
+        if (dataSetList.isEmpty) {
+          logger.warning("No sliding windows created for this partition.")
+        } else {
+          logger.info(s"Generated ${dataSetList.size} sliding windows for this partition.")
+        }
+
+        dataSetList.iterator
+      })
+  }
+
+  // Function to compute positional embeddings
   def computePositionalEmbedding(windowSize: Int, embeddingDim: Int): INDArray = {
+    logger.info(s"Computing positional embeddings with windowSize=$windowSize and embeddingDim=$embeddingDim.")
     val positionalEncoding = Nd4j.zeros(windowSize, embeddingDim)
 
     for (pos <- 0 until windowSize) {
@@ -67,9 +56,11 @@ def createSlidingWindows(embeddingsRDD: RDD[INDArray], windowSize: Int, embeddin
         positionalEncoding.putScalar(Array(pos, i + 1), math.cos(angle))
       }
     }
+    logger.info("Positional embeddings computed successfully.")
     positionalEncoding
   }
 }
+
 //package com.thanu.llm
 //
 //import org.apache.spark.rdd.RDD

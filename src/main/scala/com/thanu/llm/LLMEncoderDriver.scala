@@ -380,7 +380,7 @@
 //  }
 //}
 package com.thanu.llm
-
+import java.util.logging.{Level, Logger}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
@@ -398,9 +398,11 @@ import org.nd4j.evaluation.classification.Evaluation
 import org.deeplearning4j.util.ModelSerializer
 
 object LLMEncoderDriver {
+  val logger: Logger = Logger.getLogger(this.getClass.getName)
+
   def main(args: Array[String]): Unit = {
     if (args.length != 3) {
-      System.err.println("Usage: LLMEncoderDriver <input_path> <output_path> <embedding_dim>")
+      logger.severe("Usage: LLMEncoderDriver <input_path> <output_path> <embedding_dim>")
       System.exit(-1)
     }
 
@@ -420,6 +422,7 @@ object LLMEncoderDriver {
     val sc = spark.sparkContext
 
     // Load tokens and create embeddings
+    logger.info("Loading data and creating embeddings.")
     val tokensRDD = spark.sparkContext.textFile(inputPath)
     val embeddingsRDD = tokensRDD.map { token =>
       (token, EmbeddingUtils.generateRandomEmbedding(embeddingDim))
@@ -429,6 +432,7 @@ object LLMEncoderDriver {
     val slidingWindowsRDD = SlidingWindowProcessor.createSlidingWindows(embeddingValuesRDD, windowSize = 4, embeddingDim)
 
     // Save embeddings and sliding windows for inspection
+    logger.info("Saving embeddings and sliding windows for inspection.")
     embeddingsRDD.saveAsTextFile(outputPath + "/embeddings")
     slidingWindowsRDD.saveAsTextFile(outputPath + "/sliding_windows")
 
@@ -444,6 +448,7 @@ object LLMEncoderDriver {
     val Array(trainingData, testData) = nonEmptyDataSetRDD.randomSplit(Array(0.8, 0.2), seed = 12345)
 
     // Model Configuration
+    logger.info("Configuring the model.")
     val modelConf = new NeuralNetConfiguration.Builder()
       .weightInit(org.deeplearning4j.nn.weights.WeightInit.XAVIER)
       .updater(new Adam(0.005))
@@ -465,6 +470,7 @@ object LLMEncoderDriver {
     model.setListeners(new ScoreIterationListener(10))
 
     // Distributed Training Setup
+    logger.info("Setting up distributed training.")
     val trainingMaster = new ParameterAveragingTrainingMaster.Builder(32)
       .averagingFrequency(5)
       .batchSizePerWorker(32)
@@ -474,25 +480,23 @@ object LLMEncoderDriver {
     val sparkModel = new SparkDl4jMultiLayer(sc, model, trainingMaster)
 
     // Training over multiple epochs
-    println("Starting epoch-based training...")
+    logger.info("Starting epoch-based training.")
     val globalStartTime = System.currentTimeMillis()
 
     for (epoch <- 1 to numEpochs) {
-      println(s"Starting epoch $epoch")
+      logger.info(s"Starting epoch $epoch")
       val epochStartTime = System.currentTimeMillis()
 
       // Train the model
-      //sparkModel.fit(trainingData)
-          try {
-            sparkModel.fit(trainingData)
-          } catch {
-            case e: NullPointerException =>
-              println("Caught NullPointerException during training, likely due to empty partitions.")
-              e.printStackTrace()
-          }
+      try {
+        sparkModel.fit(trainingData)
+      } catch {
+        case e: NullPointerException =>
+          logger.log(Level.SEVERE, "Caught NullPointerException during training, likely due to empty partitions.", e)
+      }
 
       val epochEndTime = System.currentTimeMillis()
-      println(s"Completed epoch $epoch in ${(epochEndTime - epochStartTime) / 1000.0} seconds")
+      logger.info(s"Completed epoch $epoch in ${(epochEndTime - epochStartTime) / 1000.0} seconds")
 
       // Evaluate the model after each epoch
       val evaluation = new Evaluation(embeddingDim)
@@ -502,30 +506,29 @@ object LLMEncoderDriver {
           val output = model.output(data.getFeatures)
           evaluation.eval(data.getLabels, output)
         }
-        println(s"Evaluation Metrics for Epoch $epoch:")
-        println(evaluation.stats())
+        logger.info(s"Evaluation Metrics for Epoch $epoch:\n${evaluation.stats()}")
       } else {
-        println(s"No data available for evaluation in Epoch $epoch.")
+        logger.warning(s"No data available for evaluation in Epoch $epoch.")
       }
     }
 
     val globalEndTime = System.currentTimeMillis()
-    println(s"Total training time: ${(globalEndTime - globalStartTime) / 1000.0} seconds")
+    logger.info(s"Total training time: ${(globalEndTime - globalStartTime) / 1000.0} seconds")
 
     // Save the trained model
     ModelSerializer.writeModel(model, outputPath + "/LLM_Spark_Model.zip", true)
-    println(s"Model saved at ${outputPath}/LLM_Spark_Model.zip")
+    logger.info(s"Model saved at ${outputPath}/LLM_Spark_Model.zip")
 
     // Print Spark Training Metrics
     val trainingStats = sparkModel.getSparkTrainingStats
     if (trainingStats != null) {
-      println("Training statistics:")
-      println(trainingStats.statsAsString())
+      logger.info("Training statistics:\n" + trainingStats.statsAsString())
     } else {
-      println("No training statistics available.")
+      logger.warning("No training statistics available.")
     }
 
     // Stop Spark Context
+    logger.info("Shutting down Spark session.")
     spark.stop()
   }
 }
