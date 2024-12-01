@@ -28,6 +28,7 @@ object MainDriver {
       val numEpochs = 5 // Number of epochs for training
 
       // Initialize Spark session
+      //Quick Test
       spark = SparkSession.builder
         .appName("LLM Encoder with Spark")
         //.master("local[*]")
